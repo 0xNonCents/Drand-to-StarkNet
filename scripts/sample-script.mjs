@@ -6,6 +6,7 @@
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
 const hre = require("hardhat");
+const starknet = hre.starknet;
 
 import Client, { HTTP } from "drand-client";
 import fetch from "node-fetch";
@@ -27,12 +28,12 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const Greeter = await hre.ethers.getContractFactory("Greeter");
-  const greeter = await Greeter.deploy("Hello, Hardhat!");
+  const RNGOperator = await starknet.getContractFactory("rng-operator");
+  const RNGOperatorDeployed = await RNGOperator.deploy();
 
-  await greeter.deployed();
+  await RNGOperatorDeployed.deployed();
 
-  console.log("Greeter deployed to:", greeter.address);
+  console.log("RNGOperator deployed to:", RNGOperatorDeployed.address);
 
   const options = { chainHash };
 
