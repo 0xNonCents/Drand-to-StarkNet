@@ -11,7 +11,9 @@ const starknet = hre.starknet;
 import Client, { HTTP } from "drand-client";
 import fetch from "node-fetch";
 import AbortController from "abort-controller";
-
+import { uint256 } from "starknet";
+import { BigNumber } from "ethers";
+const { bnToUint256, isUint256 } = uint256;
 global.fetch = fetch;
 global.AbortController = AbortController;
 
@@ -31,17 +33,23 @@ async function main() {
   const RNGOperator = await starknet.getContractFactory("rng-operator");
   const RNGOperatorDeployed = await RNGOperator.deploy();
 
-  await RNGOperatorDeployed.deployed();
-
   console.log("RNGOperator deployed to:", RNGOperatorDeployed.address);
 
   const options = { chainHash };
-
   const client = await Client.wrap(HTTP.forURLs(urls, chainHash), options);
 
   // e.g. use the client to get the latest randomness round:
   for await (const res of client.watch()) {
-    console.log(res);
+    const high = "0x" + res.randomness.slice(0, 32);
+    const low = "0x" + res.randomness.slice(32, 64);
+    const randomUint = {
+      high,
+      low,
+    };
+    console.log(randomUint);
+    RNGOperatorDeployed.invoke("recieve_rng", {
+      rng: { randomness: randomUint },
+    });
   }
 }
 

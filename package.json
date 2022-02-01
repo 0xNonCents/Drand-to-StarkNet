@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@shardlabs/starknet-hardhat-plugin": "^0.3.10",
-    "drand-client": "^0.2.0"
+    "drand-client": "^0.2.0",
+    "starknet": "^2.5.1"
   }
 }

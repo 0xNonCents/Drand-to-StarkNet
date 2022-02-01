@@ -24,5 +24,10 @@ module.exports = {
       url: "http://localhost:5000",
     },
   },
+  mocha: {
+    // Used for deployment in Mocha tests
+    // Defaults to "alpha" (for Alpha testnet), which is preconfigured even if you don't see it under `networks:`
+    starknetNetwork: "myNetwork",
+  },
   solidity: "0.8.4",
 };
