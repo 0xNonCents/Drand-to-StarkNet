@@ -31,17 +31,18 @@ end
 func rng_recieved(randomnes : Uint256):
 end
 
+# @dev argument in constructor appears to be mandatory for hardhat mocha tests
 @constructor
-func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
+func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(arg : felt):
     request_index.write(0)
     recieve_index.write(0)
 
     return ()
 end
 
-func resolve_requests{syscall_ptr : felt*, range_check_ptr}(
+func resolve_requests{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}(
         curr_index : felt, end_index : felt, randomness : Uint256):
-    if start_index == end_index:
+    if curr_index == end_index:
         recieve_index.write(curr_index)
         return ()
     end
