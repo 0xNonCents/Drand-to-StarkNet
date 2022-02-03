@@ -21,20 +21,40 @@ namespace IRNGOperator:
 end
 
 @storage_var
-func operator_addres() -> (addr : felt):
+func operator_address() -> (addr : felt):
+end
+
+@storage_var
+func latest_rng() -> (rng : felt):
 end
 
 @constructor
 func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        op_addres : felt):
-    operator_addres.write(op_addres)
+        op_address : felt):
+    operator_address.write(op_address)
 
     return ()
 end
 
 @external
 func request_rng{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
-    let (addr) = operator_addres.read()
+    let (addr) = operator_address.read()
     IRNGOperator.request_rng(contract_address=addr)
     return ()
+end
+
+@external
+func will_recieve_rng{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+        rng : felt):
+    # Do something with the rng
+    latest_rng.write(rng)
+    return ()
+end
+
+@view
+func get_latest_rng{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (
+        rng : felt):
+    let (rng) = latest_rng.read()
+
+    return (rng)
 end
