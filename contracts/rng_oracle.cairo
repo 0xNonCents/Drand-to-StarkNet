@@ -43,7 +43,7 @@ end
 
 # @dev argument in constructor appears to be mandatory for hardhat mocha tests
 @constructor
-func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
+func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(val : felt):
     request_index.write(1)
     completed_index.write(1)
 
@@ -74,8 +74,13 @@ func resolve_rng_requests{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : H
     # TODO : verify calling address
     # TODO : verify randomness
     rng_recieved.emit(randomness=rng)
+
     let (start_index) = completed_index.read()
     let (end_index) = request_index.read()
+
+    if start_index == end_index:
+        return ()
+    end
 
     resolve_requests(start_index, end_index, rng)
     return ()
@@ -86,30 +91,10 @@ func request_rng{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
     let (caller_address) = get_caller_address()
     let (curr_index) = request_index.read()
 
+    # TODO : verify caller against whitelist
+
     requests.write(curr_index, Request(callback_address=caller_address))
     request_index.write(curr_index + 1)
 
     return ()
-end
-
-@view
-func get_request_index{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (
-        res : felt):
-    let (curr_index) = request_index.read()
-    return (curr_index)
-end
-
-@view
-func get_completed_index{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (
-        res : felt):
-    let (curr_index) = completed_index.read()
-    return (curr_index)
-end
-
-@view
-func get_request{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        index : felt) -> (res : Request):
-    let (req) = requests.read(index)
-
-    return (req)
 end

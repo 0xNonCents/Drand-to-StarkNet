@@ -30,25 +30,26 @@ async function main() {
   // await hre.run('compile');
 
   // We get the contract to deploy
-  const RNGOperator = await starknet.getContractFactory("rng-operator");
-  const RNGOperatorDeployed = await RNGOperator.deploy();
+  const Oracle = await starknet.getContractFactory("rng_oracle");
+  const OracleDeployed = await Oracle.deploy({ val: 1 });
 
-  console.log("RNGOperator deployed to:", RNGOperatorDeployed.address);
+  console.log("Oracle deployed to:", OracleDeployed.address);
 
   const options = { chainHash };
   const client = await Client.wrap(HTTP.forURLs(urls, chainHash), options);
 
   // e.g. use the client to get the latest randomness round:
   for await (const res of client.watch()) {
-    const high = "0x" + res.randomness.slice(0, 32);
-    const low = "0x" + res.randomness.slice(32, 64);
+    const rng_high = "0x" + res.randomness.slice(0, 32);
+    const rng_low = "0x" + res.randomness.slice(32, 64);
     const randomUint = {
-      high,
-      low,
+      high: rng_high,
+      low: rng_low,
     };
-    console.log(randomUint);
-    RNGOperatorDeployed.invoke("recieve_rng", {
-      rng: { randomness: randomUint },
+    await OracleDeployed.invoke("resolve_rng_requests", {
+      rng_high: BigNumber.from(rng_high),
+
+      rng_low: BigNumber.from(rng_low),
     });
   }
 }
