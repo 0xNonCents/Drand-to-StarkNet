@@ -12,7 +12,7 @@ struct DrandPayload:
 end
 
 @contract_interface
-namespace IRNGOperator:
+namespace IRNGOracle:
     func recieve_rng(amount : DrandPayload):
     end
 
@@ -39,7 +39,7 @@ end
 @external
 func request_rng{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
     let (addr) = operator_address.read()
-    IRNGOperator.request_rng(contract_address=addr)
+    IRNGOracle.request_rng(contract_address=addr)
     return ()
 end
 

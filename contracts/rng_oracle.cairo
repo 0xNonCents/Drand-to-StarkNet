@@ -68,14 +68,16 @@ end
 
 @external
 func resolve_rng_requests{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashBuiltin*}(
-        rng : RNGPayload):
+        rng_high : felt, rng_low : felt):
+    let rng = Uint256(low=rng_low, high=rng_high)
+
     # TODO : verify calling address
     # TODO : verify randomness
-    rng_recieved.emit(randomness=rng.randomness)
-    let (start_index) = request_index.read()
-    let (end_index) = completed_index.read()
+    rng_recieved.emit(randomness=rng)
+    let (start_index) = completed_index.read()
+    let (end_index) = request_index.read()
 
-    resolve_requests(start_index, end_index, rng.randomness)
+    resolve_requests(start_index, end_index, rng)
     return ()
 end
 
