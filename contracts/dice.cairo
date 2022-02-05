@@ -70,5 +70,5 @@ end
 func get_roll_result{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         id : felt) -> (roll : felt):
     let (roll) = roll_results.read(id)
-    return (roll)
+    return (roll + 1)
 end
