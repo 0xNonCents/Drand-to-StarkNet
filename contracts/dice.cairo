@@ -17,7 +17,7 @@ namespace IRNGOracle:
     func recieve_rng(amount : DrandPayload):
     end
 
-    func request_rng():
+    func request_rng() -> (requestId : felt):
     end
 end
 
@@ -25,8 +25,8 @@ end
 func oracle_address() -> (addr : felt):
 end
 
-@event
-func roll_result(roll : felt):
+@storage_var
+func roll_results(id : felt) -> (result : felt):
 end
 
 @constructor
@@ -37,25 +37,38 @@ func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_p
     return ()
 end
 
-func request_rng{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
+func roll_dice{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(rng : felt) -> (
+        roll : felt):
+    let (_, roll) = unsigned_div_rem(rng, 6)
+    return (roll)
+end
+
+@external
+func request_rng{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (
+        request_id : felt):
     let (oracle) = oracle_address.read()
-    IRNGOracle.request_rng(contract_address=oracle)
-    return ()
+    let (request_id) = IRNGOracle.request_rng(contract_address=oracle)
+    return (request_id)
 end
 
 @external
 func will_recieve_rng{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
-        rng : felt):
+        rng : felt, request_id : felt):
     let (oracle) = oracle_address.read()
     let (caller_address) = get_caller_address()
 
     assert oracle = caller_address
 
+    let (roll) = roll_dice(rng)
+
+    roll_results.write(request_id, roll)
+
     return ()
 end
 
-func roll_dice{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(rng : felt):
-    let (_, roll) = unsigned_div_rem(rng, 6)
-    roll_result.emit(roll=roll)
-    return ()
+@view
+func get_roll_result{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
+        id : felt) -> (roll : felt):
+    let (roll) = roll_results.read(id)
+    return (roll)
 end

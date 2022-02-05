@@ -12,7 +12,7 @@ namespace IRNGConsumer:
     func request_rng():
     end
 
-    func will_recieve_rng(rng : felt):
+    func will_recieve_rng(rng : felt, request_id : felt):
     end
 end
 
@@ -23,6 +23,7 @@ end
 
 struct Request:
     member callback_address : felt
+    member request_id : felt
 end
 
 @storage_var
@@ -60,7 +61,8 @@ func resolve_requests{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : HashB
 
     # TODO : make hash unique for each iteration
     let (hash) = hash2{hash_ptr=pedersen_ptr}(randomness.low, randomness.high)
-    IRNGConsumer.will_recieve_rng(contract_address=request.callback_address, rng=hash)
+    IRNGConsumer.will_recieve_rng(
+        contract_address=request.callback_address, rng=hash, request_id=request.request_id)
 
     resolve_requests(curr_index + 1, end_index, randomness)
     return ()
@@ -87,14 +89,17 @@ func resolve_rng_requests{syscall_ptr : felt*, range_check_ptr, pedersen_ptr : H
 end
 
 @external
-func request_rng{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
+func request_rng{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}() -> (
+        request_id : felt):
     let (caller_address) = get_caller_address()
     let (curr_index) = request_index.read()
 
     # TODO : verify caller against whitelist
 
-    requests.write(curr_index, Request(callback_address=caller_address))
+    let (request_id) = hash2{hash_ptr=pedersen_ptr}(caller_address, curr_index)
+
+    requests.write(curr_index, Request(callback_address=caller_address, request_id=request_id))
     request_index.write(curr_index + 1)
 
-    return ()
+    return (request_id)
 end
