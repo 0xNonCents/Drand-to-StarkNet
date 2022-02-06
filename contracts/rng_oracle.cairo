@@ -44,7 +44,7 @@ end
 
 # @dev argument in constructor appears to be mandatory for hardhat mocha tests
 @constructor
-func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(val : felt):
+func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}():
     request_index.write(1)
     completed_index.write(1)
 

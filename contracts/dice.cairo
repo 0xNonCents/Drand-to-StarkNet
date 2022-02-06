@@ -5,7 +5,7 @@
 from starkware.cairo.common.uint256 import Uint256
 from starkware.starknet.common.syscalls import get_caller_address
 from starkware.cairo.common.cairo_builtins import HashBuiltin
-from starkware.cairo.common.math import unsigned_div_rem
+from starkware.cairo.common.math import unsigned_div_rem, split_felt
 
 struct DrandPayload:
     member randomness : Uint256
@@ -29,6 +29,10 @@ end
 func roll_results(id : felt) -> (result : felt):
 end
 
+@event
+func rng_request_resolved(rng : felt, request_id : felt, result : felt):
+end
+
 @constructor
 func constructor{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         oracle_addr : felt):
@@ -39,8 +43,10 @@ end
 
 func roll_dice{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(rng : felt) -> (
         roll : felt):
-    let (_, roll) = unsigned_div_rem(rng, 6)
-    return (roll)
+    # Take the lower 128 bits of the random string
+    let (_, low) = split_felt(rng)
+    let (_, roll) = unsigned_div_rem(low, 6)
+    return (roll + 1)
 end
 
 @external
@@ -63,6 +69,7 @@ func will_recieve_rng{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_ch
 
     roll_results.write(request_id, roll)
 
+    rng_request_resolved.emit(rng, request_id, roll)
     return ()
 end
 
@@ -70,5 +77,5 @@ end
 func get_roll_result{syscall_ptr : felt*, pedersen_ptr : HashBuiltin*, range_check_ptr}(
         id : felt) -> (roll : felt):
     let (roll) = roll_results.read(id)
-    return (roll + 1)
+    return (roll)
 end

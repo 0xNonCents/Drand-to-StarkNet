@@ -35,6 +35,13 @@ async function main() {
 
   console.log("Oracle deployed to:", OracleDeployed.address);
 
+  const Dice = await starknet.getContractFactory("dice");
+  const DiceDeployed = await Dice.deploy({
+    oracle_addr: OracleDeployed.address,
+  });
+
+  console.log("Dice deployed to ", DiceDeployed.address);
+
   const options = { chainHash };
   const client = await Client.wrap(HTTP.forURLs(urls, chainHash), options);
 

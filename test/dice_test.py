@@ -7,7 +7,7 @@ from starkware.starkware_utils.error_handling import StarkException, StarkErrorC
 from starkware.starknet.testing.starknet import Starknet
 
 RNG_ORACLE_CONTRACT = os.path.join(os.path.dirname(__file__), "../contracts/rng_oracle.cairo")
-RNG_CONSUMER_CONTRACT = os.path.join(os.path.dirname(__file__), "../contracts/rng_consumer.cairo")
+DICE_CONTRACT = os.path.join(os.path.dirname(__file__), "../contracts/dice.cairo")
 RNG_HASH_CONTRACT =  os.path.join(os.path.dirname(__file__), "../contracts/utils/rng_hash.cairo")
 
 @pytest.fixture(scope="module")
@@ -25,26 +25,9 @@ async def rng_factory(starknet_factory):
 
     # Deploy the account contract
     rng_oracle_contract = await starknet.deploy(source=RNG_ORACLE_CONTRACT) 
-    rng_consumer_contract = await starknet.deploy(source=RNG_CONSUMER_CONTRACT, constructor_calldata=[rng_oracle_contract.contract_address])
+    rng_consumer_contract = await starknet.deploy(source=DICE_CONTRACT, constructor_calldata=[rng_oracle_contract.contract_address])
     rng_hash_contract = await starknet.deploy(source=RNG_HASH_CONTRACT)
     return [rng_oracle_contract, rng_consumer_contract, rng_hash_contract]
-
-
-#@pytest.mark.asyncio
-async def test_request_rng_requests(rng_factory):
-    [rng_oracle_contract, rng_consumer_contract, _] = rng_factory
-
-    request_index = await rng_oracle_contract.get_request_index().invoke()
-    assert request_index.result[0] == 1
-
-    await rng_consumer_contract.request_rng().invoke()
-
-    request_index = await rng_oracle_contract.get_request_index().invoke()
-    assert request_index.result[0] == 2
-
-    request = await rng_oracle_contract.get_request(1).invoke()
-    assert request.result[0].callback_address == rng_consumer_contract.contract_address
-
 
 def uint(low, high):
     return (high, low)
@@ -52,16 +35,18 @@ def uint(low, high):
 def RNGPaylod(randomness):
         return (randomness)
 
-#@pytest.mark.asyncio
+@pytest.mark.asyncio
 async def test_resolve_rng_request(rng_factory):
     [rng_oracle_contract, rng_consumer_contract, rng_hash_contract] = rng_factory
 
-    await rng_consumer_contract.request_rng().invoke()
+    request_id = await rng_consumer_contract.request_rng().invoke()
     
-    RNGPaylod(randomness=(0,1))
-    await rng_oracle_contract.resolve_rng_requests(rng_low=1, rng_high=0).invoke()
-
-    latest_rng = await rng_consumer_contract.get_latest_rng().invoke()
+    await rng_oracle_contract.resolve_rng_requests(rng_low=10, rng_high=0).invoke()
+    
     rng = await rng_hash_contract.get_hash(high=0, low=1).invoke()
-    assert latest_rng.result[0] == rng.result[0]
+    
+    latest_rng = await rng_consumer_contract.get_roll_result(request_id.result[0]).call()
+
+    assert latest_rng.result[0] > 0 & latest_rng.result[0] <= 6
+
     
