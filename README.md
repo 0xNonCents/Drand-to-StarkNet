@@ -1,3 +1,4 @@
-# RNG Cairo
+Drand to Starknet
 
-A set of smart contracts enabling RNG on StarkNet using the Drand verifiable randomness network.
+A bot that retrieves drand payloads and sends them to an oracle contract on StarkNet.
+
