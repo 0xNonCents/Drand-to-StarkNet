@@ -13,6 +13,8 @@ import fetch from "node-fetch";
 import AbortController from "abort-controller";
 import { uint256 } from "starknet";
 import { BigNumber } from "ethers";
+import { exec } from "child_process";
+
 const { bnToUint256, isUint256 } = uint256;
 global.fetch = fetch;
 global.AbortController = AbortController;
@@ -42,11 +44,27 @@ async function main() {
 
     console.log(rng_high);
     console.log(rng_low);
+
+    exec(
+      `starknet invoke \
+    --address ${oracleContractAddress} \
+    --abi ./starknet-artifacts/contracts/rng_oracle.cairo/rng_oracle_abi.json \
+    --function resolve_rng_requests \
+    --network alpha-goerli \
+    --inputs ${rng_high} ${rng_low}`,
+      (error, stdout, stder) => {
+        console.log(error);
+        console.log(stdout);
+        console.log(stder);
+      }
+    );
+
+    /*
     await OracleDeployed.invoke("resolve_rng_requests", {
       rng_high: BigNumber.from(rng_high),
       rng_low: BigNumber.from(rng_low),
     });
-
+    */
     console.log("completed rng submission");
   }
 }
